@@ -1,0 +1,6 @@
+__pycache__/
+*.py[cod]
+.DS_Store
+prompts.jsonl
+scores.jsonl
+score_errors.jsonl
