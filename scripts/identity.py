@@ -213,8 +213,13 @@ def main() -> int:
 
     try:
         path = identity_path(environment)
+        is_new_install = not path.exists()
         identity = reroll_identity(path) if action == "reroll" else ensure_identity(path)
-        if action != "init":
+        if action == "init":
+            from publication import initialize_publication, publication_path
+
+            initialize_publication(publication_path(path), new_install=is_new_install)
+        else:
             print(identity["username"])
     except Exception as error:
         if action == "init":

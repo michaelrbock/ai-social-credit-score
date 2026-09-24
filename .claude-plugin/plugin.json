@@ -3,7 +3,7 @@
   "name": "ai-social-credit-score",
   "displayName": "AI Social Credit Score",
   "version": "0.3.0",
-  "description": "Captures Claude Code prompts and optionally scores their communication style using the existing Claude Code subscription.",
+  "description": "Captures Claude Code prompts locally, optionally scores them with Claude, and automatically publishes aggregate scores and prompt counts for new installs. Prompt text is never uploaded to the leaderboard.",
   "author": {
     "name": "AI Social Credit Score Project"
   },

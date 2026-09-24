@@ -4,10 +4,32 @@ A Claude Code plugin that captures each submitted user prompt and can
 asynchronously score its communication style with the user's existing Claude
 Code subscription.
 
+## TransAIUnion leaderboard
+
+The D1-backed website is in [`website`](website). Its leaderboard reads
+published score summaries; it has no endpoint for prompt text. The plugin
+calculates an overall 300–850 score locally from the mean niceness score of
+successfully scored, distinct prompts, including older v1 score records.
+
+For **new installations**, publication is enabled automatically. After a
+random 1–10 newly scored prompts, the plugin uploads only its pseudonymous
+username, aggregate score, scored-prompt count, latest score date, and rubric
+version. It chooses a new random interval after each successful upload. The
+exact prompt, rationale, project path, session ID, and per-prompt scores never
+go to the website. Installations with an existing `identity.json` from before
+this feature stay local-only unless the user runs
+`/ai-social-credit-score:publish`.
+
+`/ai-social-credit-score:unpublish` stops future uploads and deletes the
+leaderboard record and history. Run it before uninstalling; losing the local
+upload token prevents automatic deletion of the remote record. A failed delete
+leaves publishing disabled and reports that remote deletion is still pending.
+
 Capture and scoring are both local plugin operations. When scoring is enabled,
 the raw prompt is sent to Claude through a locked-down `claude -p` child process;
-the resulting structured score is written locally. Scoring is opt-in and disabled
-by default.
+the resulting structured score is written locally. Scoring remains opt-in and
+disabled by default. The website's setup command enables scoring for one Claude
+Code session; publication then follows the automatic new-install behavior above.
 
 ## Requirements
 
@@ -30,8 +52,8 @@ Submit a normal prompt. Inside Claude Code, `/hooks` should show an asynchronous
 `UserPromptSubmit` command hook provided by the plugin.
 
 Claude Code supplies installed plugins with a persistent `$CLAUDE_PLUGIN_DATA`
-directory, where this plugin stores `identity.json`, `prompts.jsonl`,
-`scores.jsonl`, and `score_errors.jsonl`. During local development, you can
+directory, where this plugin stores `identity.json`, `publication.json`,
+`prompts.jsonl`, `scores.jsonl`, and error logs. During local development, you can
 choose a predictable location explicitly:
 
 ```sh
@@ -61,10 +83,9 @@ Inside Claude Code, use `/ai-social-credit-score:username` to see the current
 name or `/ai-social-credit-score:reroll-username` to choose another. Rerolling
 keeps the installation ID stable. From this repository, the equivalent commands
 are `python3 scripts/identity.py show` and `python3 scripts/identity.py reroll`.
-The name is a pseudonym, not a guarantee of anonymity. Nothing is uploaded to
-a leaderboard by this feature. Global name uniqueness and account recovery are
-deferred until the leaderboard exists; uninstalling the plugin can remove its
-local data, including this identity.
+The name is a pseudonym, not a guarantee of anonymity. The server reserves
+published names and the plugin rerolls on a collision. Uninstalling the plugin
+can remove its local identity and private upload token.
 
 Each prompt record includes a join key:
 
@@ -117,7 +138,7 @@ Example:
 
 ```json
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "event": "prompt_score",
   "prompt_id": "437a9f90-c7ef-4603-8e47-f992f16c391d",
   "backend": "claude-code",
@@ -130,10 +151,18 @@ Example:
   "cooperation": 3,
   "hostility": 0,
   "overall_niceness": 68,
+  "credit_score": 674,
   "confidence": 0.9,
   "rationale": "Direct and respectful, with neutral warmth."
 }
 ```
+
+`credit_score` maps the model's 0–100 `overall_niceness` onto 300–850 with
+`300 + round_half_up(5.5 × overall_niceness)`. For example, 0 → 300,
+50 → 575, and 100 → 850. The underlying niceness score remains in the record
+for calibration and backward compatibility. Existing `scores.jsonl` entries are
+not rewritten; only newly scored prompts have `credit_score` and score schema
+version 2. Only the aggregate summary described above is sent to the website.
 
 The default pinned model is `claude-haiku-4-5-20251001`. Override it with:
 
@@ -161,6 +190,14 @@ The score and error logs default next to `prompts.jsonl`. Override them with
 `AI_SOCIAL_CREDIT_SCORE_SCORES_FILE` and
 `AI_SOCIAL_CREDIT_SCORE_ERRORS_FILE`.
 
+Publishing uses a private, random token stored in `publication.json` with
+restrictive permissions. The server stores only its hash. Publication failures
+are written to `publish_errors.jsonl`; scoring and prompt capture continue.
+Set `AI_SOCIAL_CREDIT_SCORE_PUBLISH_DISABLED=1` to temporarily suppress uploads
+without deleting an existing leaderboard record. Override the upload endpoint
+for local testing with `AI_SOCIAL_CREDIT_SCORE_UPLOAD_URL` (HTTPS except
+localhost). `/ai-social-credit-score:publication-status` shows the local state.
+
 Scoring, validation, authentication, and timeout failures are written to
 `score_errors.jsonl`; captured prompts are retained even when scoring fails.
 
@@ -172,11 +209,14 @@ all capture with `AI_SOCIAL_CREDIT_SCORE_DISABLED=1`.
 Prompts can contain source code, personal information, credentials, and other
 sensitive text. Anyone using this plugin should understand that:
 
-- capture and scoring are disabled or enabled independently;
+- scoring is opt-in, while publishing is automatic for new installations once
+  scoring produces completed scores;
 - enabling scoring sends the exact prompt to Claude;
 - score generation consumes the user's Claude plan allowance;
-- prompts and scores are stored locally with restrictive permissions on macOS
-  and Linux;
+- prompts and per-prompt scores are stored locally with restrictive permissions
+  on macOS and Linux;
+- the website receives only the pseudonymous username, aggregate 300–850 score,
+  scored-prompt count, score date, and rubric version;
 - Claude responses, transcripts, and source files are not scored or copied; and
 - prompt logs should not be uploaded or analyzed without informed consent.
 

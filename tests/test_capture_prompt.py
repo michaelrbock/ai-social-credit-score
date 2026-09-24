@@ -36,6 +36,7 @@ class CapturePromptTest(unittest.TestCase):
         environment.pop("AI_SOCIAL_CREDIT_SCORE_DEBUG", None)
         environment.pop("ANTHROPIC_API_KEY", None)
         environment.pop("AI_SOCIAL_CREDIT_SCORE_BACKEND", None)
+        environment["AI_SOCIAL_CREDIT_SCORE_PUBLISH_DISABLED"] = "1"
         environment["AI_SOCIAL_CREDIT_SCORE_LOG_FILE"] = str(log_file)
         if disabled:
             environment["AI_SOCIAL_CREDIT_SCORE_DISABLED"] = "1"
@@ -168,6 +169,8 @@ class CapturePromptTest(unittest.TestCase):
             self.assertEqual(score_record["session_id"], "session-123")
             self.assertEqual(score_record["backend"], "claude-code")
             self.assertEqual(score_record["overall_niceness"], 68)
+            self.assertEqual(score_record["credit_score"], 674)
+            self.assertEqual(score_record["schema_version"], 2)
 
     def test_uses_claude_plugin_data_as_the_default_storage_directory(self) -> None:
         path = log_path(

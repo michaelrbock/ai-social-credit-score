@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1790289016114,
+      "tag": "0000_bent_nova",
+      "breakpoints": true
+    }
+  ]
+}

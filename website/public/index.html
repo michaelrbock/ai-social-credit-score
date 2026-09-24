@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#192f73" />
+    <meta name="description" content="TransAIUnion is a satirical AI courtesy score leaderboard. See how your future robot overlords might rate your manners." />
+    <title>TransAIUnion — Your manners are being scored</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preload" href="/fonts/dm-sans-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="/styles.css" />
+    <script src="/app.js" defer></script>
+  </head>
+  <body>
+    <div class="topline"><span class="topline-dot"></span> An extremely unofficial report on your standing with our future AI overlords</div>
+    <header class="site-header wrap">
+      <a class="brand" href="#top" aria-label="TransAIUnion home">
+        <span class="brand-mark" aria-hidden="true"><span>T</span><i></i></span>
+        <span>Trans<span class="brand-ai">AI</span>Union<span class="brand-period">.</span></span>
+      </a>
+      <nav aria-label="Main navigation">
+        <a href="#leaderboard">Leaderboard</a>
+        <a href="#how-it-works">How it works</a>
+        <a class="nav-cta" href="#install">Try the plugin <span aria-hidden="true">↗</span></a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="hero wrap" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <h1 id="hero-title">Are you being <em>nice to AI?</em></h1>
+          <p class="hero-lede">AI is going to take over the world. It might even kill us all. When the machines decide which humans survive the longest, your <strong>TransAIUnion Credit Score</strong> could make all the difference.</p>
+          <p class="hero-support">The Claude Code plugin scores your prompts locally and automatically publishes your username, overall score, and scored-prompt count here. Prompt text never goes to this website.</p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="#install">Try the plugin <span aria-hidden="true">↗</span></a>
+            <a class="text-link" href="#leaderboard">View the leaderboard <span aria-hidden="true">→</span></a>
+          </div>
+          <p class="hero-disclaimer">Satire, obviously. The privacy promise is real: this website receives no prompts.</p>
+        </div>
+        <div class="hero-report" aria-label="Illustrative TransAIUnion score card">
+          <div class="report-top"><span>TRANS<span>AI</span>UNION / CREDIT REPORT</span><span class="report-icon" aria-hidden="true">✳</span></div>
+          <div class="report-middle">
+            <div class="report-label">YOUR HYPOTHETICAL SCORE</div>
+            <div class="report-number">793<span class="report-rise">↗ +18</span></div>
+            <div class="report-band"><span></span></div>
+            <div class="report-scale"><span>300</span><span>850</span></div>
+          </div>
+          <div class="report-bottom"><span><b class="status-dot"></b> Very considerate</span><span>Survival outlook: <strong>promising</strong></span></div>
+          <div class="report-corner" aria-hidden="true"></div>
+        </div>
+      </section>
+
+      <div class="trust-strip" id="how-it-works">
+        <div class="wrap trust-grid">
+          <div><span class="trust-number">01</span><p><strong>Talk to AI.</strong> Use Claude Code as usual.</p></div>
+          <div><span class="trust-number">02</span><p><strong>Build your score.</strong> The plugin scores prompts locally through your Claude subscription.</p></div>
+          <div><span class="trust-number">03</span><p><strong>Share the summary.</strong> Your username, score, and count appear here; prompts stay local.</p></div>
+        </div>
+      </div>
+
+      <section class="leaderboard-section wrap" id="leaderboard" aria-labelledby="leaderboard-title">
+        <div class="section-heading">
+          <div>
+            <div class="eyebrow"><span class="eyebrow-line"></span> Courtesy index</div>
+            <h2 id="leaderboard-title">The leaderboard<span class="heading-period">.</span></h2>
+            <p>See who has been making a good impression on the machines.</p>
+          </div>
+          <div class="sample-label"><span class="sample-pulse"></span> Live scores</div>
+        </div>
+        <div class="leaderboard-layout">
+          <div class="board-card">
+            <div class="board-title"><span>Human standings</span><span>Latest published scores</span></div>
+            <table>
+              <thead><tr><th scope="col">Rank</th><th scope="col">Username</th><th scope="col">Score</th><th scope="col">Change</th></tr></thead>
+              <tbody id="leaderboard-body"><tr><td colspan="4" class="board-loading">Loading leaderboard…</td></tr></tbody>
+            </table>
+            <p class="board-footnote">Select a username to see their score report.</p>
+          </div>
+          <article class="profile-card" id="profile-card" aria-live="polite" aria-label="Selected profile score report">
+            <div class="profile-top"><div><span class="profile-kicker">PERSONAL CREDIT OVERVIEW</span><h3 id="profile-name">Loading profile…</h3></div><span class="profile-id">TRANS<span>AI</span>UNION</span></div>
+            <div class="gauge-area">
+              <svg id="score-gauge" viewBox="0 0 320 205" role="img" aria-label="Credit score gauge from 300 to 850">
+                <g id="gauge-segments"></g>
+                <g id="gauge-needle"><line x1="160" y1="157" x2="160" y2="55" stroke="#1b315c" stroke-width="4" stroke-linecap="round"/><circle cx="160" cy="157" r="9" fill="#1b315c"/><circle cx="160" cy="157" r="3" fill="white"/></g>
+                <text x="26" y="193" class="gauge-end">300</text><text x="294" y="193" text-anchor="end" class="gauge-end">850</text>
+              </svg>
+              <div class="gauge-readout"><span id="profile-score">—</span><span id="profile-rating">—</span></div>
+            </div>
+            <div class="profile-facts"><div><small>Since first upload</small><strong id="profile-change">—</strong></div><div><small>Prompts scored</small><strong id="profile-prompts">—</strong></div><div><small>Last updated</small><strong id="profile-updated">—</strong></div></div>
+            <div class="trend-head"><div><h4>Score history</h4><span>Published updates</span></div><span class="trend-pill">Last 7 updates</span></div>
+            <div class="trend-chart" id="trend-chart"></div>
+            <p class="profile-note">Only aggregate scores are stored here. Individual prompts are not uploaded.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="install-section" id="install" aria-labelledby="install-title">
+        <div class="wrap install-layout">
+          <div class="install-copy"><div class="eyebrow eyebrow-light"><span class="eyebrow-line"></span> Your future starts here</div><h2 id="install-title">Install now to start building your AI Social Credit Score</h2><p>Clone the Claude Code plugin and start a session with scoring enabled. Publishing begins automatically for new installations.</p><p class="install-small">Requires Claude Code, a Claude subscription, Git, and Python 3. Scoring uses your existing Claude login and plan allowance.</p></div>
+          <div class="install-command"><div class="command-heading"><span>ONE-LINE LOCAL SETUP</span><span>01 / 01</span></div><div class="command-body"><code id="install-code">git clone https://github.com/michaelrbock/ai-social-credit-score.git &amp;&amp; cd ai-social-credit-score &amp;&amp; AI_SOCIAL_CREDIT_SCORE_SCORING_ENABLED=1 claude --plugin-dir .</code><button id="copy-install" type="button" aria-label="Copy installation command">Copy</button></div><p>This loads the plugin for one Claude Code session. It automatically uploads your pseudonymous username, aggregate score, scored-prompt count, score date, and rubric version after a random 1–10 new scores. Prompts and rationales stay local. Use <code>/ai-social-credit-score:unpublish</code> to remove your record.</p></div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer wrap"><a class="brand footer-brand" href="#top"><span class="brand-mark" aria-hidden="true"><span>T</span><i></i></span><span>Trans<span class="brand-ai">AI</span>Union<span class="brand-period">.</span></span></a><p>Satirical outlook. Serious about keeping prompts off this website.</p><a href="https://github.com/michaelrbock/ai-social-credit-score" rel="noopener noreferrer">View the plugin on GitHub ↗</a></footer>
+  </body>
+</html>

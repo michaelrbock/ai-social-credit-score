@@ -12,7 +12,12 @@ ROOT = Path(__file__).resolve().parents[1]
 FAKE_CLAUDE = ROOT / "tests" / "fixtures" / "fake_claude.py"
 sys.path.insert(0, str(ROOT / "scripts"))
 
-from score_prompt import ScoringError, score_prompt, validate_assessment
+from score_prompt import (
+    ScoringError,
+    credit_score_from_niceness,
+    score_prompt,
+    validate_assessment,
+)
 
 
 class ScorePromptTest(unittest.TestCase):
@@ -68,7 +73,22 @@ class ScorePromptTest(unittest.TestCase):
             self.assertEqual(result["backend"], "claude-code")
             self.assertEqual(result["provider"], "firstParty")
             self.assertEqual(result["overall_niceness"], 68)
+            self.assertEqual(result["credit_score"], 674)
+            self.assertEqual(result["schema_version"], 2)
             self.assertEqual(result["usage"]["cache_creation_input_tokens"], 1000)
+
+    def test_credit_score_maps_niceness_to_300_850(self) -> None:
+        self.assertEqual(credit_score_from_niceness(0), 300)
+        self.assertEqual(credit_score_from_niceness(1), 306)
+        self.assertEqual(credit_score_from_niceness(50), 575)
+        self.assertEqual(credit_score_from_niceness(68), 674)
+        self.assertEqual(credit_score_from_niceness(100), 850)
+        with self.assertRaises(ValueError):
+            credit_score_from_niceness(-1)
+        with self.assertRaises(ValueError):
+            credit_score_from_niceness(101)
+        with self.assertRaises(ValueError):
+            credit_score_from_niceness(True)
 
     def test_rejects_out_of_range_model_output(self) -> None:
         with self.assertRaisesRegex(ScoringError, "hostility"):

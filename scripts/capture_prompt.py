@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any, Mapping
 
 from identity import ensure_identity, identity_path, log_path
+from publication import initialize_publication, publication_path, publish_after_score
 from score_prompt import BACKEND, SCORER_CHILD_VARIABLE, score_prompt, scoring_enabled
 
 
@@ -146,8 +147,15 @@ def main() -> int:
         if record is not None:
             prompt_log_path = log_path(environment)
             append_record(prompt_log_path, record)
+            identity_file = identity_path(environment)
+            identity_ready = False
             try:
-                ensure_identity(identity_path(environment))
+                is_new_install = not identity_file.exists()
+                ensure_identity(identity_file)
+                initialize_publication(
+                    publication_path(identity_file), new_install=is_new_install
+                )
+                identity_ready = True
             except Exception as error:
                 debug(str(error), environment)
 
@@ -166,6 +174,23 @@ def main() -> int:
                         "scores.jsonl",
                     )
                     append_record(scores_path, score)
+                    if identity_ready:
+                        try:
+                            publish_after_score(
+                                identity_file, scores_path, environment
+                            )
+                        except Exception as error:
+                            append_record(
+                                prompt_log_path.with_name("publish_errors.jsonl"),
+                                {
+                                    "schema_version": 1,
+                                    "event": "publication_error",
+                                    "recorded_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+                                    "error_type": type(error).__name__,
+                                    "message": str(error),
+                                },
+                            )
+                            debug(str(error), environment)
                 except Exception as error:
                     errors_path = related_log_path(
                         prompt_log_path,
