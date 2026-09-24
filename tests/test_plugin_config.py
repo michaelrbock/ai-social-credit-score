@@ -9,6 +9,13 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class PluginConfigTest(unittest.TestCase):
+    def test_session_start_initializes_identity(self) -> None:
+        configuration = json.loads((ROOT / "hooks" / "hooks.json").read_text())
+        handler = configuration["hooks"]["SessionStart"][0]["hooks"][0]
+
+        self.assertEqual(handler["type"], "command")
+        self.assertIn("identity.py init", handler["command"])
+
     def test_prompt_processing_hook_is_asynchronous(self) -> None:
         configuration = json.loads((ROOT / "hooks" / "hooks.json").read_text())
         handler = configuration["hooks"]["UserPromptSubmit"][0]["hooks"][0]

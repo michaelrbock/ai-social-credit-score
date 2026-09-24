@@ -4,3 +4,4 @@ __pycache__/
 prompts.jsonl
 scores.jsonl
 score_errors.jsonl
+identity.json

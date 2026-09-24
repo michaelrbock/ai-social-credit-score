@@ -12,7 +12,7 @@ by default.
 ## Requirements
 
 - Claude Code installed, authenticated, and available as `claude` on `PATH`
-- A Claude subscription for the default scoring backend
+- A Claude subscription when scoring is enabled
 - Python 3
 
 This version is tested against Claude Code 2.1.243.
@@ -30,9 +30,9 @@ Submit a normal prompt. Inside Claude Code, `/hooks` should show an asynchronous
 `UserPromptSubmit` command hook provided by the plugin.
 
 Claude Code supplies installed plugins with a persistent `$CLAUDE_PLUGIN_DATA`
-directory, where this plugin stores `prompts.jsonl`, `scores.jsonl`, and
-`score_errors.jsonl`. During local development, you can choose a predictable
-location explicitly:
+directory, where this plugin stores `identity.json`, `prompts.jsonl`,
+`scores.jsonl`, and `score_errors.jsonl`. During local development, you can
+choose a predictable location explicitly:
 
 ```sh
 AI_SOCIAL_CREDIT_SCORE_DATA_DIR="$HOME/Library/Application Support/ai-social-credit-score" \
@@ -44,6 +44,27 @@ Then inspect the latest captured prompt:
 ```sh
 tail -n 1 "$HOME/Library/Application Support/ai-social-credit-score/prompts.jsonl"
 ```
+
+## Anonymous username
+
+On the first Claude Code session with the plugin, a `SessionStart` hook quietly
+creates a fun pseudonymous username such as `CuriousCapybara274`. If that
+hook does not run, the first captured prompt creates the same local identity.
+No model call or personal information is used to generate it. The username and
+a separate random installation ID are stored in `identity.json` beside the
+prompt log. The file is private on macOS and Linux, and the identity survives
+new sessions and plugin updates.
+Names created in the earlier dashed format are changed to this format on first
+use, while keeping the same installation ID.
+
+Inside Claude Code, use `/ai-social-credit-score:username` to see the current
+name or `/ai-social-credit-score:reroll-username` to choose another. Rerolling
+keeps the installation ID stable. From this repository, the equivalent commands
+are `python3 scripts/identity.py show` and `python3 scripts/identity.py reroll`.
+The name is a pseudonym, not a guarantee of anonymity. Nothing is uploaded to
+a leaderboard by this feature. Global name uniqueness and account recovery are
+deferred until the leaderboard exists; uninstalling the plugin can remove its
+local data, including this identity.
 
 Each prompt record includes a join key:
 
@@ -81,9 +102,9 @@ No Anthropic API key is required. For each prompt, the asynchronous command hook
 
 The child runs with `--safe-mode`, no tools, and no session persistence. The raw
 prompt is passed over stdin rather than placed in process arguments. A separate
-environment marker prevents recursion even if hook isolation changes. Direct API
-and cloud-provider environment variables are removed from this child so the
-default backend cannot silently switch away from subscription authentication.
+environment marker prevents recursion even if hook isolation changes. API
+credentials and cloud-provider settings are removed from this child so scoring
+uses the existing Claude Code subscription.
 
 Scoring is intentionally out of band and may take several seconds. Inspect the
 latest completed score:
@@ -122,28 +143,9 @@ AI_SOCIAL_CREDIT_SCORE_MODEL=claude-haiku-4-5-20251001 \
 claude --plugin-dir .
 ```
 
-This backend consumes the user's Claude plan allowance. It does not use a
-separate API billing account.
-
-## Optional direct API backend
-
-The prior Messages API implementation remains available for development, CI, or
-users who explicitly prefer separate API billing:
-
-```sh
-export ANTHROPIC_API_KEY="..."
-AI_SOCIAL_CREDIT_SCORE_SCORING_ENABLED=1 \
-AI_SOCIAL_CREDIT_SCORE_BACKEND=api \
-claude --plugin-dir .
-```
-
-`AI_SOCIAL_CREDIT_SCORE_BACKEND` accepts:
-
-- `claude-code` or `subscription`: use Claude Code authentication; this is the
-  default.
-- `api`: require `ANTHROPIC_API_KEY` and call the Messages API directly.
-- `auto`: use the API only when `ANTHROPIC_API_KEY` is present; otherwise use
-  Claude Code.
+Scoring consumes the user's Claude plan allowance. It does not use a separate
+API billing account. If an older setup sets `AI_SOCIAL_CREDIT_SCORE_BACKEND=api`
+or `auto`, remove that setting; those values are no longer supported.
 
 ## Storage and diagnostics
 
@@ -180,8 +182,8 @@ sensitive text. Anyone using this plugin should understand that:
 
 ## Tests
 
-The test suite uses a fake Claude executable and a mocked Messages API. It does
-not consume subscription quota or make a live API request.
+The test suite uses a fake Claude executable. It does not consume subscription
+quota or make a live API request.
 
 ```sh
 python3 -m unittest discover -s tests -v

@@ -35,6 +35,7 @@ class CapturePromptTest(unittest.TestCase):
         environment = os.environ.copy()
         environment.pop("AI_SOCIAL_CREDIT_SCORE_DEBUG", None)
         environment.pop("ANTHROPIC_API_KEY", None)
+        environment.pop("AI_SOCIAL_CREDIT_SCORE_BACKEND", None)
         environment["AI_SOCIAL_CREDIT_SCORE_LOG_FILE"] = str(log_file)
         if disabled:
             environment["AI_SOCIAL_CREDIT_SCORE_DISABLED"] = "1"
@@ -90,6 +91,9 @@ class CapturePromptTest(unittest.TestCase):
             self.assertEqual(record["prompt"], payload["prompt"])
             self.assertNotIn("transcript_path", record)
             datetime.fromisoformat(record["captured_at"].replace("Z", "+00:00"))
+            identity = json.loads(log_file.with_name("identity.json").read_text())
+            uuid.UUID(identity["installation_id"])
+            self.assertNotIn("prompt", identity)
 
             if os.name != "nt":
                 self.assertEqual(stat.S_IMODE(log_file.stat().st_mode), 0o600)
@@ -123,6 +127,7 @@ class CapturePromptTest(unittest.TestCase):
 
             self.assertEqual(result.returncode, 0)
             self.assertFalse(log_file.exists())
+            self.assertFalse(log_file.with_name("identity.json").exists())
 
     def test_scoring_failure_is_recorded_without_losing_the_prompt(self) -> None:
         with tempfile.TemporaryDirectory() as temporary_directory:

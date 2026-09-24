@@ -1,19 +1,15 @@
-"""Score captured prompts through Claude Code or the Anthropic Messages API."""
+"""Score captured prompts through the user's Claude Code subscription."""
 
 from __future__ import annotations
 
 import json
 import subprocess
-import urllib.error
-import urllib.request
 from datetime import datetime, timezone
 from typing import Any, Callable, Mapping
 
 
-API_URL = "https://api.anthropic.com/v1/messages"
-ANTHROPIC_VERSION = "2023-06-01"
 DEFAULT_MODEL = "claude-haiku-4-5-20251001"
-DEFAULT_BACKEND = "claude-code"
+BACKEND = "claude-code"
 DEFAULT_TIMEOUT_SECONDS = 90
 RUBRIC_VERSION = "niceness-rubric-v1"
 SCORER_CHILD_VARIABLE = "AI_SOCIAL_CREDIT_SCORE_SCORER_CHILD"
@@ -72,13 +68,6 @@ SCORE_SCHEMA = {
     ],
 }
 
-SCORE_TOOL = {
-    "name": "record_niceness_score",
-    "description": "Record a structured niceness assessment for one user prompt.",
-    "input_schema": SCORE_SCHEMA,
-}
-
-
 class ScoringError(RuntimeError):
     """A safe-to-log scoring failure."""
 
@@ -88,28 +77,6 @@ def scoring_enabled(environment: Mapping[str, str]) -> bool:
         environment.get("AI_SOCIAL_CREDIT_SCORE_SCORING_ENABLED", "").lower()
         in TRUTHY_VALUES
     )
-
-
-def selected_backend(environment: Mapping[str, str]) -> str:
-    """Resolve the explicitly configured scoring backend."""
-
-    configured = environment.get(
-        "AI_SOCIAL_CREDIT_SCORE_BACKEND", DEFAULT_BACKEND
-    ).strip().lower()
-    aliases = {
-        "claude": "claude-code",
-        "claude-code": "claude-code",
-        "subscription": "claude-code",
-        "api": "api",
-        "messages-api": "api",
-        "auto": "api" if environment.get("ANTHROPIC_API_KEY") else "claude-code",
-    }
-    backend = aliases.get(configured)
-    if backend is None:
-        raise ScoringError(
-            "AI_SOCIAL_CREDIT_SCORE_BACKEND must be claude-code, api, or auto"
-        )
-    return backend
 
 
 def scoring_timeout(environment: Mapping[str, str]) -> int:
@@ -307,91 +274,10 @@ def score_with_claude_code(
     return score_record(
         prompt_id=prompt_id,
         session_id=session_id,
-        backend="claude-code",
+        backend=BACKEND,
         provider=provider,
         model=model_used,
         assessment=result.get("structured_output"),
-        usage=normalized_usage(result),
-    )
-
-
-def score_with_api(
-    prompt: str,
-    prompt_id: str,
-    session_id: Any,
-    environment: Mapping[str, str],
-    *,
-    urlopen: Callable[..., Any] = urllib.request.urlopen,
-) -> dict[str, Any]:
-    """Score through the direct Anthropic Messages API."""
-
-    api_key = environment.get("ANTHROPIC_API_KEY")
-    if not api_key:
-        raise ScoringError("ANTHROPIC_API_KEY is required for the api backend")
-
-    model = environment.get("AI_SOCIAL_CREDIT_SCORE_MODEL", DEFAULT_MODEL)
-    request_body = {
-        "model": model,
-        "max_tokens": 512,
-        "temperature": 0,
-        "system": SYSTEM_PROMPT
-        + "\n\nCall record_niceness_score exactly once with your assessment.",
-        "messages": [
-            {
-                "role": "user",
-                "content": "Score this JSON-encoded user prompt:\n"
-                + json.dumps({"prompt": prompt}, ensure_ascii=False),
-            }
-        ],
-        "tools": [SCORE_TOOL],
-        "tool_choice": {"type": "tool", "name": SCORE_TOOL["name"]},
-    }
-    request = urllib.request.Request(
-        API_URL,
-        data=json.dumps(request_body, ensure_ascii=False).encode("utf-8"),
-        headers={
-            "content-type": "application/json",
-            "x-api-key": api_key,
-            "anthropic-version": ANTHROPIC_VERSION,
-        },
-        method="POST",
-    )
-
-    try:
-        with urlopen(request, timeout=scoring_timeout(environment)) as response:
-            result = json.load(response)
-    except urllib.error.HTTPError as error:
-        raise ScoringError(f"Anthropic API returned HTTP {error.code}") from error
-    except urllib.error.URLError as error:
-        raise ScoringError("Could not reach the Anthropic API") from error
-    except (json.JSONDecodeError, UnicodeDecodeError) as error:
-        raise ScoringError("Anthropic API returned invalid JSON") from error
-
-    content = result.get("content") if isinstance(result, dict) else None
-    if not isinstance(content, list):
-        raise ScoringError("Anthropic API response did not contain content")
-
-    assessment = next(
-        (
-            block.get("input")
-            for block in content
-            if isinstance(block, dict)
-            and block.get("type") == "tool_use"
-            and block.get("name") == SCORE_TOOL["name"]
-        ),
-        None,
-    )
-    model_used = result.get("model")
-    if not isinstance(model_used, str):
-        model_used = model
-
-    return score_record(
-        prompt_id=prompt_id,
-        session_id=session_id,
-        backend="api",
-        provider="anthropic",
-        model=model_used,
-        assessment=assessment,
         usage=normalized_usage(result),
     )
 
@@ -403,23 +289,19 @@ def score_prompt(
     environment: Mapping[str, str],
     *,
     runner: Callable[..., Any] = subprocess.run,
-    urlopen: Callable[..., Any] = urllib.request.urlopen,
 ) -> dict[str, Any]:
-    """Select a scoring backend and return one validated score record."""
+    """Return a validated score, rejecting retired API backend settings."""
 
-    backend = selected_backend(environment)
-    if backend == "claude-code":
-        return score_with_claude_code(
-            prompt,
-            prompt_id,
-            session_id,
-            environment,
-            runner=runner,
+    configured_backend = environment.get("AI_SOCIAL_CREDIT_SCORE_BACKEND", "").strip().lower()
+    if configured_backend not in {"", "claude", "claude-code", "subscription"}:
+        raise ScoringError(
+            "AI_SOCIAL_CREDIT_SCORE_BACKEND no longer supports direct API scoring; "
+            "unset it to use the Claude Code subscription"
         )
-    return score_with_api(
+    return score_with_claude_code(
         prompt,
         prompt_id,
         session_id,
         environment,
-        urlopen=urlopen,
+        runner=runner,
     )

@@ -11,7 +11,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Mapping
 
-from score_prompt import SCORER_CHILD_VARIABLE, score_prompt, scoring_enabled
+from identity import ensure_identity, identity_path, log_path
+from score_prompt import BACKEND, SCORER_CHILD_VARIABLE, score_prompt, scoring_enabled
 
 
 SCHEMA_VERSION = 1
@@ -31,44 +32,6 @@ def is_scorer_child(environment: Mapping[str, str]) -> bool:
     """Prevent a scorer subprocess from recursively invoking this hook."""
 
     return environment.get(SCORER_CHILD_VARIABLE, "").lower() in TRUTHY_VALUES
-
-
-def log_path(environment: Mapping[str, str], platform: str = sys.platform) -> Path:
-    """Resolve the prompt log path, honoring explicit user configuration."""
-
-    configured_file = environment.get("AI_SOCIAL_CREDIT_SCORE_LOG_FILE")
-    if configured_file:
-        return Path(configured_file).expanduser()
-
-    configured_directory = environment.get("AI_SOCIAL_CREDIT_SCORE_DATA_DIR")
-    if configured_directory:
-        return Path(configured_directory).expanduser() / "prompts.jsonl"
-
-    plugin_data_directory = environment.get("CLAUDE_PLUGIN_DATA")
-    if plugin_data_directory:
-        return Path(plugin_data_directory).expanduser() / "prompts.jsonl"
-
-    home = Path.home()
-    if platform == "darwin":
-        data_directory = (
-            home / "Library" / "Application Support" / "ai-social-credit-score"
-        )
-    elif platform == "win32":
-        local_app_data = environment.get("LOCALAPPDATA")
-        data_directory = (
-            Path(local_app_data).expanduser()
-            if local_app_data
-            else home / "AppData" / "Local"
-        ) / "ai-social-credit-score"
-    else:
-        xdg_data_home = environment.get("XDG_DATA_HOME")
-        data_directory = (
-            Path(xdg_data_home).expanduser()
-            if xdg_data_home
-            else home / ".local" / "share"
-        ) / "ai-social-credit-score"
-
-    return data_directory / "prompts.jsonl"
 
 
 def capture_record(event: Mapping[str, Any]) -> dict[str, Any] | None:
@@ -116,7 +79,6 @@ def related_log_path(
 def scoring_error_record(
     record: Mapping[str, Any],
     error: Exception,
-    environment: Mapping[str, str],
 ) -> dict[str, Any]:
     return {
         "schema_version": SCHEMA_VERSION,
@@ -124,9 +86,7 @@ def scoring_error_record(
         "event": "prompt_score_error",
         "prompt_id": record["prompt_id"],
         "session_id": record.get("session_id"),
-        "backend": environment.get(
-            "AI_SOCIAL_CREDIT_SCORE_BACKEND", "claude-code"
-        ),
+        "backend": BACKEND,
         "error_type": type(error).__name__,
         "message": str(error),
     }
@@ -186,6 +146,10 @@ def main() -> int:
         if record is not None:
             prompt_log_path = log_path(environment)
             append_record(prompt_log_path, record)
+            try:
+                ensure_identity(identity_path(environment))
+            except Exception as error:
+                debug(str(error), environment)
 
             if scoring_enabled(environment):
                 try:
@@ -211,7 +175,7 @@ def main() -> int:
                     )
                     append_record(
                         errors_path,
-                        scoring_error_record(record, error, environment),
+                        scoring_error_record(record, error),
                     )
                     debug(str(error), environment)
     except Exception as error:  # A capture failure must not interrupt Claude Code.
