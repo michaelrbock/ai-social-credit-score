@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+.DS_Store
+prompts.jsonl
+scores.jsonl
+score_errors.jsonl
+identity.json
+publication.json
+publication.lock
+publish_errors.jsonl
+/TODO.md

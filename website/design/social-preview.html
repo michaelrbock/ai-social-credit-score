@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>AI Social Credit Score — social preview source</title>
+  <style>
+    @font-face { font-family: "DM Sans"; src: url("../dist/fonts/dm-sans-latin.woff2") format("woff2"); font-weight: 400 700; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; width: 1200px; height: 630px; }
+    body { background: #0b0e0d; color: #f1f4ee; font-family: "DM Sans", sans-serif; }
+    .card { position: relative; width: 1200px; height: 630px; padding: 52px 64px; overflow: hidden; background: radial-gradient(ellipse at 90% 40%, #1a291b 0, transparent 58%), #0b0e0d; }
+    .brand { display: flex; align-items: center; gap: 14px; font-size: 24px; font-weight: 700; letter-spacing: -.6px; }
+    .mark { display: grid; place-items: center; width: 49px; height: 44px; border: 1px solid #46523f; border-radius: 6px; font: 700 26px monospace; color: #c3f5a4; }
+    main { display: grid; grid-template-columns: 540px 468px; gap: 64px; margin-top: 52px; }
+    .eyebrow { margin: 0 0 22px; color: #c3f5a4; font: 14px monospace; letter-spacing: 1.6px; text-transform: uppercase; }
+    h1 { margin: 0; font-size: 78px; font-weight: 500; line-height: .99; letter-spacing: -4.5px; }
+    h1 span { color: #c3f5a4; }
+    .subline { color: #a0aaa2; font-size: 21px; margin: 24px 0 0; }
+    .terminal { align-self: start; margin-top: 6px; border: 1px solid #46523f; border-radius: 10px; background: #111613; overflow: hidden; box-shadow: 0 20px 64px #0004; }
+    .bar { display: flex; align-items: center; gap: 7px; padding: 16px 20px; border-bottom: 1px solid #2a342d; background: #19201b; }
+    .dot { width: 8px; height: 8px; background: #5e6d62; border-radius: 50%; }
+    .bar-label { margin-left: 12px; color: #a0aaa2; font: 13px monospace; }
+    .example { margin-left: auto; color: #a0aaa2; font: 12px monospace; }
+    .content { padding: 24px 28px 20px; }
+    .command { margin: 0; color: #e8eee9; font: 16px monospace; }
+    .command span { color: #c3f5a4; }
+    .score { display: flex; align-items: baseline; gap: 16px; color: #c3f5a4; font-size: 86px; letter-spacing: -5px; line-height: 1.1; margin-top: 14px; }
+    .score small { color: #a0aaa2; font: 18px monospace; letter-spacing: 0; }
+    .chart { display: block; width: 410px; height: 96px; margin-top: 8px; }
+    .status { display: flex; justify-content: space-between; padding: 16px 28px; border-top: 1px solid #2a342d; color: #c3f5a4; background: #141b16; font: 14px monospace; }
+    .status span:last-child { color: #a0aaa2; }
+    footer { display: flex; align-items: center; justify-content: space-between; position: absolute; left: 64px; right: 64px; bottom: 44px; padding-top: 24px; border-top: 1px solid #2a342d; font: 15px monospace; color: #a0aaa2; }
+    footer span:last-child { color: #c3f5a4; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <header class="brand"><span class="mark">&gt;_</span> AI Social Credit Score</header>
+    <main>
+      <section>
+        <p class="eyebrow">A credit score for your prompts</p>
+        <h1>Track how<br><span>nice</span> you are<br>to <span>AI</span></h1>
+        <p class="subline">You review your code. Now, review your tone.</p>
+      </section>
+      <aside class="terminal" aria-label="Illustrative score and history">
+        <div class="bar"><i class="dot"></i><i class="dot"></i><i class="dot"></i><span class="bar-label">claude</span><span class="example">example</span></div>
+        <div class="content">
+          <p class="command"><span>❯</span> Your personal AI score</p>
+          <div class="score">719 <small>/ 850</small></div>
+          <svg class="chart" viewBox="0 0 410 96" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="A rising sample score chart">
+            <path d="M0 20H410M0 50H410M0 80H410" stroke="#2a342d" stroke-dasharray="3 6"/>
+            <path d="M0 74H37L63 84L87 64H111L138 43H165L186 57H205L232 34H264L289 25H330L356 8H402" stroke="#c3f5a4" stroke-width="3" stroke-linejoin="round"/>
+            <circle cx="402" cy="8" r="5" fill="#c3f5a4"/>
+          </svg>
+        </div>
+        <div class="status"><span>+3 last prompt</span><span>stored locally</span></div>
+      </aside>
+    </main>
+    <footer><span>Single player. Local history. No API key.</span><span>aisocialcreditscore.com</span></footer>
+  </div>
+</body>
+</html>

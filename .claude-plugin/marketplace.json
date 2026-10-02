@@ -1,0 +1,16 @@
+{
+  "name": "ai-social-credit-score",
+  "owner": {
+    "name": "Michael Bock"
+  },
+  "metadata": {
+    "description": "Personal communication scoring for Claude Code."
+  },
+  "plugins": [
+    {
+      "name": "ai-social-credit-score",
+      "source": "./",
+      "description": "Automatically score your prompts using your Claude subscription, with local history and no uploads."
+    }
+  ]
+}

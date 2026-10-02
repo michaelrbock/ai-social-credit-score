@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "ai-social-credit-score",
+  "displayName": "AI Social Credit Score",
+  "version": "0.10.0",
+  "description": "Automatically track and score your prompts using your Claude subscription. Scores and history stay on your computer; no API key, account, or leaderboard uploads.",
+  "author": {
+    "name": "AI Social Credit Score Project"
+  },
+  "keywords": [
+    "hooks",
+    "prompt-capture",
+    "llm-evaluation",
+    "research",
+    "social-credit-score"
+  ]
+}
